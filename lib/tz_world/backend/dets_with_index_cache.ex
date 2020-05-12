@@ -38,20 +38,22 @@ defmodule TzWorld.Backend.DetsWithIndexCache do
     GenServer.call(__MODULE__, :reload_data, @timeout * 3)
   end
 
-  @dets_file :code.priv_dir(:tz_world) ++ '/timezones-geodata.dets'
-  @slots 800
+  @slots 1_000
 
   def filename do
-    @dets_file
+    :code.priv_dir(:tz_world) ++ '/timezones-geodata.dets'
   end
 
-  @dets_options [file: @dets_file, estimated_no_objects: @slots]
+  def dets_options do
+    [file: filename(), estimated_no_objects: @slots]
+  end
+
   def get_geodata_table do
-    :dets.open_file(__MODULE__, @dets_options)
+    :dets.open_file(__MODULE__, dets_options())
   end
 
   def save_dets_geodata do
-    {:ok, t} = :dets.open_file(__MODULE__, @dets_options)
+    {:ok, t} = :dets.open_file(__MODULE__, dets_options())
     :ok = :dets.delete_all_objects(t)
 
     {:ok, geodata} = TzWorld.GeoData.load_compressed_data()
