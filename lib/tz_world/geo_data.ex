@@ -9,8 +9,8 @@ defmodule TzWorld.GeoData do
 
   def default_data_dir do
     TzWorld.app_name()
-    |> :code.priv_dir
-    |> List.to_string
+    |> :code.priv_dir()
+    |> List.to_string()
   end
 
   def data_dir do
@@ -42,14 +42,17 @@ defmodule TzWorld.GeoData do
   end
 
   def transform_source_data(source_data, version) do
-    {:ok, [{_, json} | _rest]} = :zip.unzip(source_data, [:memory])
+    {:ok, [path | _rest]} = :zip.unzip(source_data)
 
-    json
-    |> Jason.decode!()
-    |> Geo.JSON.decode!()
-    |> Map.get(:geometries)
-    |> Enum.map(&update_map_keys/1)
-    |> Enum.map(&calculate_bounding_box/1)
+    path
+    |> List.to_string()
+    |> File.stream!([], 256 * 1024)
+    |> Jaxon.Stream.from_enumerable()
+    |> Jaxon.Stream.query([:root, "features", :all])
+    |> Stream.map(&Geo.JSON.decode!/1)
+    |> Stream.map(&update_map_keys/1)
+    |> Stream.map(&calculate_bounding_box/1)
+    |> Enum.into([])
     |> List.insert_at(0, version)
   end
 
@@ -75,7 +78,6 @@ defmodule TzWorld.GeoData do
   defp calculate_bounding_box(
          %Geo.MultiPolygon{coordinates: polygons, properties: properties} = poly
        ) do
-
     bounding_boxes = Enum.map(polygons, &calculate_bounding_box/1)
     properties = Map.put(properties, :bounding_box, bounding_boxes)
 

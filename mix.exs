@@ -33,6 +33,7 @@ defmodule TzWorld.Mixfile do
     [
       {:geo, "~> 1.0 or ~> 2.0 or ~> 3.0"},
       {:jason, "~> 1.0"},
+      {:jaxon, "~> 2.0-alpha"},
       {:castore, "~> 0.1", optional: true},
       {:certifi, "~> 2.5", optional: true},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
